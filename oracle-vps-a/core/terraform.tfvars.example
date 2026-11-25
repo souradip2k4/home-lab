@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+# Do NOT put the API key passphrase here — export TF_VAR_oci_private_key_password instead.
+
+compartment_ocid    = "ocid1.tenancy.oc1..aaaaaaaa2mfnatj5nacysf6kbjjrd3wetqs6rhbslwolmk4y4xd2udmtbk2q"
+ssh_public_key_path = "~/.ssh/arm-flex-vps.pub"
+
+# Optional overrides (defaults shown in variables.tf)
+# region             = "ap-hyderabad-1"
+# oci_config_profile = "DEFAULT"
+# ssh_user           = "ubuntu"

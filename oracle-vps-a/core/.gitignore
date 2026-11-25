@@ -1,0 +1,27 @@
+# Local provider/module cache
+.terraform/
+
+# State (contains resource details; keep backed up, never commit)
+*.tfstate
+*.tfstate.*
+
+# Saved plans
+tfplan
+*.tfplan
+
+# Variable values (may contain account-specific data)
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Crash logs and CLI overrides
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# .terraform.lock.hcl is intentionally committed (pins provider checksums)
