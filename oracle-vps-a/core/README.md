@@ -136,6 +136,51 @@ terraform plan -target=module.network
 terraform apply -refresh-only
 ```
 
+### Rebuilding the VPS with Tailscale (cloud-init)
+
+`modules/compute/cloud-init.yaml` installs Tailscale on the instance's **first boot** and joins your
+tailnet. It only runs on a newly created instance, so the instance has to be rebuilt. Only the
+instance and its boot volume are replaced. The network and the reserved IP stay; the IP moves to the
+new instance.
+
+> All data on the current boot volume is lost. Back up anything you need (Portainer data, configs) first.
+> A1 capacity in Hyderabad can be limited. If the create fails with `Out of host capacity`, run
+> `terraform apply` again later.
+
+```sh
+# 1. Tailscale admin console → Settings → Keys → Generate auth key (one-off, pre-approved).
+#    Put it in terraform.tfvars:   tailscale_auth_key = "tskey-auth-..."
+
+# 2. Plan the rebuild. Expect: 1 to add, 1 to change, 1 to destroy
+#    (instance replaced, reserved IP's private_ip_id updated in place)
+terraform plan -replace=module.compute.oci_core_instance.this -out=tfplan
+terraform show tfplan
+terraform apply tfplan
+
+# 3. The VPS has new SSH host keys: forget the old one, then log in
+ssh-keygen -R "$(terraform output -raw reserved_public_ip)"
+$(terraform output -raw ssh_command) -i ~/.ssh/oracle-vps-a
+
+# 4. On the VPS
+cloud-init status --long                      # status: done, no errors
+sudo tail -n 30 /var/log/cloud-init-output.log
+tailscale status                              # lists your tailnet devices
+tailscale ip -4                               # the VPS's 100.x.x.x address
+
+# 5. On your laptop
+tailscale ping arm-flex-vps
+ssh ubuntu@arm-flex-vps                       # Tailscale SSH: no -i key needed (may open a browser to confirm)
+
+# 6. Remove tailscale_auth_key from terraform.tfvars (it's used up). Thanks to
+#    ignore_changes on user_data, this does not touch the instance:
+terraform plan                                # expect "No changes"
+```
+
+Why `-replace` and not `terraform destroy`: `destroy` would remove everything, including the
+reserved IP (blocked by `prevent_destroy`), and `-replace` only rebuilds the one resource. Destroy and
+create run in that order, so the old 200 GB boot volume is gone before the new one is created, which
+keeps you within the Always Free 200 GB.
+
 ### Destroying
 
 The reserved IP has `prevent_destroy = true`, so a plain `terraform destroy` fails on purpose.
@@ -149,6 +194,8 @@ The reserved IP has `prevent_destroy = true`, so a plain `terraform destroy` fai
 
 - **Lessons learned:** [docs/terraform-lessons.md](docs/terraform-lessons.md) walks through the real errors
   and plan diffs from the first deployment, with explanations.
+- **Reading plans:** [docs/reading-terraform-plans.md](docs/reading-terraform-plans.md) explains
+  replacement plans, `user_data`/cloud-init, `ignore_changes`, and the `+ ~ -` attribute symbols.
 
 - **State** is stored locally in `terraform.tfstate` (gitignored). Back it up. If you lose it,
   Terraform no longer knows about these resources.

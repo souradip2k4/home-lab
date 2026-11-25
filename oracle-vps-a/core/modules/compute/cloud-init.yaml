@@ -1,0 +1,17 @@
+#cloud-config
+# Rendered by Terraform with templatefile() and passed to the instance as user_data.
+# cloud-init runs this only once, on the instance's FIRST boot.
+# Logs on the VPS: /var/log/cloud-init-output.log
+# Based on Tailscale's official cloud-init sample, without the exit-node / IP-forwarding parts.
+
+package_update: true
+
+runcmd:
+  # One-command install, from https://tailscale.com/download/
+  - ['sh', '-c', 'curl -fsSL https://tailscale.com/install.sh | sh']
+%{ if tailscale_auth_key != "" ~}
+  # Join the tailnet with a one-off auth key
+  - ['tailscale', 'up', '--auth-key=${tailscale_auth_key}', '--hostname=${hostname}']
+  # Allow SSH over the tailnet with Tailscale identity (Tailscale SSH)
+  - ['tailscale', 'set', '--ssh']
+%{ endif ~}

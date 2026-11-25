@@ -8,3 +8,7 @@ ssh_public_key_path = "~/.ssh/arm-flex-vps.pub"
 # region             = "ap-hyderabad-1"
 # oci_config_profile = "DEFAULT"
 # ssh_user           = "ubuntu"
+
+# Only needed when the instance is (re)created. Generate a one-off key in the Tailscale
+# admin console (Settings -> Keys), paste it here, rebuild, then delete this line.
+# tailscale_auth_key = "tskey-auth-..."

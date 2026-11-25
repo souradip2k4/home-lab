@@ -27,5 +27,6 @@ module "compute" {
   boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
   boot_volume_vpus_per_gb = var.boot_volume_vpus_per_gb
   ssh_authorized_keys     = file(pathexpand(var.ssh_public_key_path))
+  tailscale_auth_key      = var.tailscale_auth_key
   freeform_tags           = local.common_tags
 }

@@ -70,6 +70,13 @@ variable "ssh_authorized_keys" {
   type        = string
 }
 
+variable "tailscale_auth_key" {
+  description = "One-off Tailscale auth key used by cloud-init on first boot. Empty = install Tailscale but don't join."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "agent_plugins" {
   description = "Oracle Cloud Agent plugins and their desired state (ENABLED or DISABLED)."
   type        = map(string)

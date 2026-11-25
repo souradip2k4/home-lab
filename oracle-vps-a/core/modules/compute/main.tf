@@ -41,6 +41,12 @@ resource "oci_core_instance" "this" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_authorized_keys
+
+    # First-boot setup (installs Tailscale and joins the tailnet). See cloud-init.yaml.
+    user_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
+      tailscale_auth_key = var.tailscale_auth_key
+      hostname           = var.name
+    }))
   }
 
   agent_config {
@@ -72,6 +78,13 @@ resource "oci_core_instance" "this" {
     remote_data_volume_type             = "PARAVIRTUALIZED"
     is_consistent_volume_naming_enabled = true
     is_pv_encryption_in_transit_enabled = true
+  }
+
+  lifecycle {
+    # user_data is only read on first boot, and OCI does not allow changing it on a running
+    # instance. Ignoring it means a new or removed Tailscale key in tfvars never touches the
+    # running VPS. A newly created instance (first apply or -replace) still gets the current value.
+    ignore_changes = [metadata["user_data"]]
   }
 }
 

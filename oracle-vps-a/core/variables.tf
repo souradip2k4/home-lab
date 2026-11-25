@@ -126,3 +126,10 @@ variable "ssh_user" {
   type        = string
   default     = "ubuntu"
 }
+
+variable "tailscale_auth_key" {
+  description = "One-off, pre-approved Tailscale auth key (tskey-auth-...). Read by cloud-init only when the instance is created. Set it in terraform.tfvars just before a rebuild; leave empty otherwise."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
